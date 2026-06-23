@@ -6,8 +6,7 @@ import {
 import { taskService, type Task } from "../../../api/taskService";
 import { projectService, type Project } from "../../../api/projectService";
 
-type Priority = "URGENT" | "HIGH" | "MEDIUM" | "LOW";
-type Status = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+
 
 const priorityStyles: Record<string, string> = {
   urgent: "text-red-400 bg-red-950/30 border-red-900/30",

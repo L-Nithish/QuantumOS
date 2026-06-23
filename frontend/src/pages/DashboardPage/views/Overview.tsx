@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
-  Activity, Target, CheckCircle2, Circle, MessageSquare, Zap, Sparkles, Clock
+  Activity, Target, CheckCircle2, Circle, Zap, Sparkles, Clock
 } from "lucide-react";
 import { projectService, type Project } from "../../../api/projectService";
 import { taskService, type Task } from "../../../api/taskService";

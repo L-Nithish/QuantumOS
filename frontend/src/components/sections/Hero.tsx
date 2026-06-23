@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Command, Activity, Cpu, Zap, ArrowUpRight, BarChart3, Users, Network, Database, Search, ShieldCheck, Terminal, Server } from "lucide-react";
+import { ArrowRight, Sparkles, Command, Activity, ArrowUpRight, BarChart3, Users, Network, Database, ShieldCheck, Terminal, Server } from "lucide-react";
 import HeroBackground from "../animations/HeroBackground";
 
 export default function Hero() {
