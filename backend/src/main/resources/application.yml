@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: quantumos-backend
+  datasource:
+    url: jdbc:postgresql://ep-lucky-bonus-aihwtuaw-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_QpJaxz6h8lKF
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Use update for dev, validate for prod
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: ${JWT_SECRET:veryLongSecretKeyThatShouldBeReplacedInProductionEnvironmentAndNeedsToBeAtLeast256Bits}
+  access-token-expiration-ms: 900000 # 15 minutes
+  refresh-token-expiration-ms: 604800000 # 7 days
