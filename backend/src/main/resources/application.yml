@@ -2,9 +2,9 @@ spring:
   application:
     name: quantumos-backend
   datasource:
-    url: jdbc:postgresql://ep-lucky-bonus-aihwtuaw-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require
-    username: neondb_owner
-    password: npg_QpJaxz6h8lKF
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://ep-lucky-bonus-aihwtuaw-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${SPRING_DATASOURCE_USERNAME:neondb_owner}
+    password: ${SPRING_DATASOURCE_PASSWORD:npg_QpJaxz6h8lKF}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -14,6 +14,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
 
 jwt:
   secret: ${JWT_SECRET:veryLongSecretKeyThatShouldBeReplacedInProductionEnvironmentAndNeedsToBeAtLeast256Bits}
