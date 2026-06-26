@@ -1,11 +1,11 @@
-# Build stage using Gradle
-FROM gradle:8.5-jdk17 AS build
-COPY --chown=gradle:gradle . /home/gradle/src
+# Build stage using Eclipse Temurin JDK 26
+FROM eclipse-temurin:26-jdk AS build
+COPY . /home/gradle/src
 WORKDIR /home/gradle/src
 RUN ./gradlew bootJar --no-daemon
 
-# Run stage using OpenJDK
-FROM openjdk:17-jdk-slim
+# Run stage using Eclipse Temurin JDK 26
+FROM eclipse-temurin:26-jdk
 WORKDIR /app
 COPY --from=build /home/gradle/src/build/libs/*.jar app.jar
 EXPOSE 8080
