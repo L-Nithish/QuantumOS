@@ -103,7 +103,9 @@ export default function DashboardLayout() {
             className="flex items-center gap-2.5 px-3 py-2 hover:bg-white/[0.03] rounded-md transition-colors"
           >
             <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 border border-white/10" />
-            <span className="text-[13px] font-medium text-zinc-300">Sarah K.</span>
+            <span className="text-[13px] font-medium text-zinc-300">
+              {localStorage.getItem("quantumos_user_name") || "Sarah K."}
+            </span>
           </Link>
         </div>
       </aside>

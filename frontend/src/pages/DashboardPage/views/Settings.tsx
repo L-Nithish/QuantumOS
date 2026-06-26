@@ -52,11 +52,17 @@ export default function Settings() {
               <div className="space-y-4">
                 <div>
                   <label className="text-[12px] text-zinc-500 mb-1.5 block">Display name</label>
-                  <input defaultValue="Sarah Kim" className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" />
+                  <input 
+                    defaultValue={localStorage.getItem("quantumos_user_name") || "Sarah Kim"} 
+                    className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" 
+                  />
                 </div>
                 <div>
                   <label className="text-[12px] text-zinc-500 mb-1.5 block">Email</label>
-                  <input defaultValue="sarah@quantum.inc" className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" />
+                  <input 
+                    defaultValue={localStorage.getItem("quantumos_user_email") || "sarah@quantum.inc"} 
+                    className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" 
+                  />
                 </div>
                 <div>
                   <label className="text-[12px] text-zinc-500 mb-1.5 block">Role</label>

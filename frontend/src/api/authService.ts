@@ -12,6 +12,8 @@ export const authService = {
     const response = await apiClient.post<AuthResponse>('/auth/login', { email, password });
     if (response.data.accessToken) {
       localStorage.setItem('quantumos_token', response.data.accessToken);
+      localStorage.setItem('quantumos_user_name', response.data.fullName);
+      localStorage.setItem('quantumos_user_email', response.data.email);
     }
     return response.data;
   },
@@ -21,6 +23,8 @@ export const authService = {
     const response = await apiClient.post<AuthResponse>('/auth/register', { email, password, fullName });
     if (response.data.accessToken) {
       localStorage.setItem('quantumos_token', response.data.accessToken);
+      localStorage.setItem('quantumos_user_name', response.data.fullName);
+      localStorage.setItem('quantumos_user_email', response.data.email);
     }
     return response.data;
   },
@@ -28,6 +32,8 @@ export const authService = {
   // Logout by destroying the token
   logout: () => {
     localStorage.removeItem('quantumos_token');
+    localStorage.removeItem('quantumos_user_name');
+    localStorage.removeItem('quantumos_user_email');
     window.location.href = '/';
   }
 };
