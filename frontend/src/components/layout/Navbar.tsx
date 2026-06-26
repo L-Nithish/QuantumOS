@@ -79,21 +79,35 @@ export default function Navbar() {
         <div className="h-4 w-px mx-1 bg-white/[0.06]" />
 
         <div className="flex items-center gap-2 pl-2 pr-1.5">
-          <Link
-            to="/login"
-            className="text-[13px] text-zinc-500 font-medium hover:text-white transition-colors duration-300 px-2"
-          >
-            Login
-          </Link>
-          <Link to="/register">
-            <motion.span
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-block rounded-full px-4 py-1.5 text-[12px] font-medium text-zinc-950 bg-gradient-to-br from-titanium to-platinum border border-white/10"
-            >
-              Get Started
-            </motion.span>
-          </Link>
+          {localStorage.getItem("quantumos_token") ? (
+            <Link to="/dashboard">
+              <motion.span
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-block rounded-full px-4 py-1.5 text-[12px] font-medium text-zinc-950 bg-gradient-to-br from-titanium to-platinum border border-white/10"
+              >
+                Go to Dashboard
+              </motion.span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-[13px] text-zinc-500 font-medium hover:text-white transition-colors duration-300 px-2"
+              >
+                Login
+              </Link>
+              <Link to="/register">
+                <motion.span
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-block rounded-full px-4 py-1.5 text-[12px] font-medium text-zinc-950 bg-gradient-to-br from-titanium to-platinum border border-white/10"
+                >
+                  Get Started
+                </motion.span>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </motion.header>
