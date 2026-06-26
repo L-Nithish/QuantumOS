@@ -64,7 +64,8 @@ export function DesktopPage({ onShutdown }: DesktopPageProps) {
 
   // Initialize welcome notification
   useEffect(() => {
-    showNotification('Welcome back, Admin', 'QuabtomOS Enterprise v3.2.1 is ready.', 'success');
+    const name = localStorage.getItem("quantumos_user_name")?.split(" ")[0] || "Admin";
+    showNotification(`Welcome back, ${name}`, 'QuantumOS Enterprise v3.2.1 is ready.', 'success');
   }, []);
 
   // Update styles (animation transitions) based on settings.animations

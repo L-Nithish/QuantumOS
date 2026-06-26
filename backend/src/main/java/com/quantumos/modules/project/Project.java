@@ -28,4 +28,8 @@ public class Project extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private ProjectStatus status = ProjectStatus.ACTIVE;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer progress = 0;
 }

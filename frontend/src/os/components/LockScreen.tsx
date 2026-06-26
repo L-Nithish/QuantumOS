@@ -43,8 +43,12 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
     <div id="lock-screen" className={isUnlocked ? 'unlock' : ''}>
       <div className="lock-time" id="lock-time">{formatTime(time)}</div>
       <div className="lock-date" id="lock-date">{formatDate(time)}</div>
-      <div className="lock-avatar">A</div>
-      <div className="lock-user">Administrator</div>
+      <div className="lock-avatar">
+        {localStorage.getItem("quantumos_user_name")?.trim().charAt(0).toUpperCase() || "A"}
+      </div>
+      <div className="lock-user">
+        {localStorage.getItem("quantumos_user_name") || "Administrator"}
+      </div>
       <form onSubmit={handleUnlock} className="lock-input-wrap">
         <input
           ref={inputRef}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Brain, AlertTriangle, Users, FileText, ListTodo,
@@ -39,13 +39,18 @@ const quickActions = [
 ];
 
 export default function AICommandCenter() {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: "1", role: "assistant", content: "Good morning, Sarah. I've analyzed your workspace overnight. Mobile App v3.0 has elevated risk — would you like me to generate a mitigation plan?" },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [activePanel, setActivePanel] = useState<"chat" | "insights" | "risks">("chat");
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    const firstName = localStorage.getItem("quantumos_user_name")?.split(" ")[0] || "Sarah";
+    setMessages([
+      { id: "1", role: "assistant", content: `Good morning, ${firstName}. I've analyzed your workspace overnight. Mobile App v3.0 has elevated risk — would you like me to generate a mitigation plan?` }
+    ]);
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() || sending) return;

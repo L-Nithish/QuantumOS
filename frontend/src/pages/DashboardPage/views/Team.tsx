@@ -9,15 +9,19 @@ interface Member {
   projects: number;
 }
 
-const members: Member[] = [
-  { name: "Sarah Kim", role: "Engineering Lead", email: "sarah@quantum.inc", initials: "SK", status: "active", projects: 4 },
-  { name: "Alex Morgan", role: "Senior Engineer", email: "alex@quantum.inc", initials: "AM", status: "active", projects: 3 },
-  { name: "Emma Rodriguez", role: "Product Designer", email: "emma@quantum.inc", initials: "ER", status: "away", projects: 2 },
-  { name: "David Chen", role: "Security Engineer", email: "david@quantum.inc", initials: "DC", status: "active", projects: 2 },
-  { name: "Jordan Lee", role: "Product Manager", email: "jordan@quantum.inc", initials: "JL", status: "active", projects: 5 },
-];
-
 export default function Team() {
+  const loggedInName = localStorage.getItem("quantumos_user_name") || "Administrator";
+  const loggedInEmail = localStorage.getItem("quantumos_user_email") || "admin@quantum.inc";
+  const loggedInInitials = loggedInName.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
+
+  const members: Member[] = [
+    { name: loggedInName, role: "Workspace Admin", email: loggedInEmail, initials: loggedInInitials, status: "active", projects: 0 },
+    { name: "Sarah Kim", role: "Engineering Lead", email: "sarah@quantum.inc", initials: "SK", status: "active", projects: 4 },
+    { name: "Alex Morgan", role: "Senior Engineer", email: "alex@quantum.inc", initials: "AM", status: "active", projects: 3 },
+    { name: "Emma Rodriguez", role: "Product Designer", email: "emma@quantum.inc", initials: "ER", status: "away", projects: 2 },
+    { name: "David Chen", role: "Security Engineer", email: "david@quantum.inc", initials: "DC", status: "active", projects: 2 },
+    { name: "Jordan Lee", role: "Product Manager", email: "jordan@quantum.inc", initials: "JL", status: "active", projects: 5 },
+  ];
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       <div className="flex items-end justify-between">
