@@ -34,7 +34,6 @@ public class SubscriptionService {
                 .orElseThrow(() -> new IllegalArgumentException("Subscription not found for workspace"));
     }
 
-    // TODO: Add Stripe Webhook Handlers to upgrade/cancel subscriptions
     @Transactional
     public void upgradeToPro(UUID workspaceId, String stripeCustomerId, String stripeSubscriptionId) {
         Subscription sub = getWorkspaceSubscription(workspaceId);
@@ -42,5 +41,50 @@ public class SubscriptionService {
         sub.setStripeCustomerId(stripeCustomerId);
         sub.setStripeSubscriptionId(stripeSubscriptionId);
         subscriptionRepository.save(sub);
+    }
+    
+    @Transactional
+    public void processStripeWebhook(java.util.Map<String, Object> payload) {
+        // Simulated Stripe Webhook Processing
+        String type = (String) payload.get("type");
+        if ("checkout.session.completed".equals(type)) {
+            java.util.Map<String, Object> data = (java.util.Map<String, Object>) payload.get("data");
+            if (data != null) {
+                java.util.Map<String, Object> object = (java.util.Map<String, Object>) data.get("object");
+                if (object != null) {
+                    String clientReferenceId = (String) object.get("client_reference_id");
+                    String customer = (String) object.get("customer");
+                    String subscription = (String) object.get("subscription");
+                    
+                    if (clientReferenceId != null && customer != null && subscription != null) {
+                        try {
+                            UUID workspaceId = UUID.fromString(clientReferenceId);
+                            upgradeToPro(workspaceId, customer, subscription);
+                        } catch (Exception e) {
+                            // Invalid UUID or missing workspace
+                        }
+                    }
+                }
+            }
+        } else if ("customer.subscription.deleted".equals(type)) {
+            // Simulated downgrade
+            java.util.Map<String, Object> data = (java.util.Map<String, Object>) payload.get("data");
+            if (data != null) {
+                java.util.Map<String, Object> object = (java.util.Map<String, Object>) data.get("object");
+                if (object != null) {
+                    String subscription = (String) object.get("id");
+                    if (subscription != null) {
+                        subscriptionRepository.findAll().stream()
+                            .filter(sub -> subscription.equals(sub.getStripeSubscriptionId()))
+                            .findFirst()
+                            .ifPresent(sub -> {
+                                sub.setPlanTier(SubscriptionPlan.FREE);
+                                sub.setStripeSubscriptionId(null);
+                                subscriptionRepository.save(sub);
+                            });
+                    }
+                }
+            }
+        }
     }
 }

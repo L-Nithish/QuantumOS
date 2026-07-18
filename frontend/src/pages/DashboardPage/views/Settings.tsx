@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Globe, Lock, Moon, Palette, Shield, User } from "lucide-react";
+import { userService } from "../../../api/userService";
+import type { UserProfileDto } from "../../../api/userService";
+import { workspaceService } from "../../../api/workspaceService";
+import type { Workspace } from "../../../api/workspaceService";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: User },
@@ -19,6 +23,36 @@ export default function Settings() {
     weekly: false,
     mentions: true,
   });
+
+  const [profile, setProfile] = useState<UserProfileDto | null>(null);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    userService.getCurrentUser().then(setProfile).catch(console.error);
+    workspaceService.getDefaultWorkspace().then(setWorkspace).catch(console.error);
+  }, []);
+
+  const handleSave = async () => {
+    if (activeTab === "profile" && profile) {
+      setSaving(true);
+      try {
+        const updated = await userService.updateCurrentUser({
+          fullName: profile.fullName,
+          email: profile.email
+        });
+        setProfile(updated);
+        localStorage.setItem("quantumos_user_name", updated.fullName);
+        localStorage.setItem("quantumos_user_email", updated.email);
+        alert("Profile saved successfully");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to save profile");
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -53,20 +87,22 @@ export default function Settings() {
                 <div>
                   <label className="text-[12px] text-zinc-500 mb-1.5 block">Display name</label>
                   <input 
-                    defaultValue={localStorage.getItem("quantumos_user_name") || "Sarah Kim"} 
+                    value={profile?.fullName || ""} 
+                    onChange={e => setProfile(p => p ? {...p, fullName: e.target.value} : p)}
                     className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" 
                   />
                 </div>
                 <div>
                   <label className="text-[12px] text-zinc-500 mb-1.5 block">Email</label>
                   <input 
-                    defaultValue={localStorage.getItem("quantumos_user_email") || "sarah@quantum.inc"} 
+                    value={profile?.email || ""} 
+                    onChange={e => setProfile(p => p ? {...p, email: e.target.value} : p)}
                     className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" 
                   />
                 </div>
                 <div>
                   <label className="text-[12px] text-zinc-500 mb-1.5 block">Role</label>
-                  <input defaultValue="Engineering Lead" disabled className="w-full bg-charcoal/50 border border-white/[0.04] rounded-lg px-3 py-2 text-sm text-zinc-500" />
+                  <input value="Workspace Admin" disabled className="w-full bg-charcoal/50 border border-white/[0.04] rounded-lg px-3 py-2 text-sm text-zinc-500" />
                 </div>
               </div>
             </>
@@ -132,14 +168,18 @@ export default function Settings() {
               <h2 className="text-[15px] font-semibold text-zinc-200">Workspace</h2>
               <div>
                 <label className="text-[12px] text-zinc-500 mb-1.5 block">Workspace name</label>
-                <input defaultValue="Quantum Inc" className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" />
+                <input value={workspace?.name || ""} disabled className="w-full bg-charcoal border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-zinc-200 outline-none focus:border-white/20" />
               </div>
             </>
           )}
 
           <div className="pt-4 border-t border-white/[0.05]">
-            <button className="px-4 py-2 text-[13px] font-medium text-zinc-950 bg-gradient-to-r from-zinc-200 to-zinc-400 rounded-lg">
-              Save changes
+            <button 
+              onClick={handleSave}
+              disabled={saving || (activeTab !== "profile")}
+              className="px-4 py-2 text-[13px] font-medium text-zinc-950 bg-gradient-to-r from-zinc-200 to-zinc-400 rounded-lg disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save changes"}
             </button>
           </div>
         </div>

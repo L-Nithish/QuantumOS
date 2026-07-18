@@ -53,8 +53,8 @@ export function CalculatorApp() {
       try {
         // Safe evaluation
         if (/^[\d+\-*/().%\s]+$/.test(expression)) {
-          // eslint-disable-next-line no-eval
-          const val = eval(expression) / 100;
+          const fn = new Function(`return ${expression}`);
+          const val = fn() / 100;
           setExpression(String(val));
           setResult(String(val));
         }
@@ -65,8 +65,8 @@ export function CalculatorApp() {
       try {
         // Safety: only allow numbers, math symbols
         if (/^[\d+\-*/().%\s]+$/.test(expression)) {
-          // eslint-disable-next-line no-eval
-          const evalResult = eval(expression);
+          const fn = new Function(`return ${expression}`);
+          const evalResult = fn();
           const formattedResult = Number.isFinite(evalResult)
             ? parseFloat(evalResult.toFixed(10))
             : 'Error';

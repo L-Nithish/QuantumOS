@@ -15,7 +15,6 @@ const Tasks = lazy(() => import("./pages/DashboardPage/views/Tasks"));
 const Analytics = lazy(() => import("./pages/DashboardPage/views/Analytics"));
 const Team = lazy(() => import("./pages/DashboardPage/views/Team"));
 const Settings = lazy(() => import("./pages/DashboardPage/views/Settings"));
-const AICommandCenter = lazy(() => import("./pages/DashboardPage/views/AICommandCenter"));
 const OSApp = lazy(() => import("./os/App"));
 
 function PageLoader() {
@@ -50,7 +49,6 @@ function App() {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/team" element={<Team />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/ai-command-center" element={<AICommandCenter />} />
           </Route>
 
           {/* Legacy redirects */}

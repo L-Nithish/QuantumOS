@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Search, Bell, Settings, Plus, LayoutDashboard,
-  Target, Activity, BarChart3, Users, ListTodo, Sparkles, ChevronDown, Monitor
+  Target, Activity, BarChart3, Users, ListTodo, ChevronDown, Monitor
 } from "lucide-react";
 
 const navGroups: {
@@ -13,7 +13,6 @@ const navGroups: {
     items: [
       { to: "/dashboard", icon: LayoutDashboard, label: "Overview" },
       { to: "/tasks", icon: ListTodo, label: "Tasks" },
-      { to: "/ai-command-center", icon: Sparkles, label: "AI Command Center", highlight: true },
     ],
   },
   {

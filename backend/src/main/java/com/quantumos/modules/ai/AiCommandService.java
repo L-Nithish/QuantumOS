@@ -14,11 +14,14 @@ import com.quantumos.modules.user.UserRepository;
 import com.quantumos.modules.workspace.Workspace;
 import com.quantumos.modules.workspace.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +33,10 @@ public class AiCommandService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
+    
+    // Use ObjectProvider so it doesn't fail context load if Ollama isn't configured
+    private final ObjectProvider<ChatModel> chatModelProvider;
 
-    @Transactional
     public AiCommandResponse processCommand(AiCommandRequest request, User authenticatedUser) {
         User user = request.getUserId() != null ? 
                 userRepository.findById(request.getUserId()).orElse(authenticatedUser) : authenticatedUser;
@@ -42,7 +47,13 @@ public class AiCommandService {
                     .orElseThrow(() -> new IllegalArgumentException("Workspace not found"));
         } else {
             workspace = workspaceRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("No workspace available"));
+                    .orElseGet(() -> {
+                        Workspace newWs = Workspace.builder()
+                                .name("Default Workspace")
+                                .slug("default-workspace-" + System.currentTimeMillis())
+                                .build();
+                        return workspaceRepository.save(newWs);
+                    });
         }
 
         AiConversation conversation;
@@ -50,7 +61,6 @@ public class AiCommandService {
             conversation = conversationRepository.findById(request.getConversationId())
                     .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
         } else {
-            // Start a new conversation
             String title = request.getQuery().length() > 30 ? request.getQuery().substring(0, 30) + "..." : request.getQuery();
             conversation = AiConversation.builder()
                     .workspace(workspace)
@@ -70,72 +80,35 @@ public class AiCommandService {
 
         String query = request.getQuery().trim();
         String lowerQuery = query.toLowerCase();
-        String simulatedAiReply;
-        String actionTaken = "NONE";
+        
+        List<Project> projects = projectRepository.findAll();
+        List<Task> tasks = taskRepository.findAll();
 
-        if (lowerQuery.contains("create project") || lowerQuery.contains("new project") || lowerQuery.contains("add project")) {
-            String projectName = "New Project";
-            String projectDesc = "Created via Quantum AI Command Center.";
-            
-            int index = -1;
-            if (lowerQuery.indexOf("create project") != -1) index = lowerQuery.indexOf("create project") + "create project".length();
-            else if (lowerQuery.indexOf("new project") != -1) index = lowerQuery.indexOf("new project") + "new project".length();
-            else if (lowerQuery.indexOf("add project") != -1) index = lowerQuery.indexOf("add project") + "add project".length();
-            
-            if (index != -1 && index < query.length()) {
-                String remainder = query.substring(index).trim();
-                if (remainder.toLowerCase().startsWith("named")) remainder = remainder.substring(5).trim();
-                
-                String[] parts = remainder.split("(?i)\\b(with description|description|desc|details|-)\\b", 2);
-                if (parts.length > 0 && !parts[0].trim().isEmpty()) {
-                    projectName = parts[0].trim();
-                }
-                if (parts.length > 1 && !parts[1].trim().isEmpty()) {
-                    projectDesc = parts[1].trim();
-                }
-            }
+        String actionTaken = "NONE";
+        String aiReply = "";
+
+        // Heuristic Action Handlers (Kept for reliable execution of OS commands without strict LLM JSON parsing)
+        if (lowerQuery.startsWith("create project") || lowerQuery.startsWith("new project")) {
+            String projectName = query.replaceFirst("(?i)(create project|new project)", "").trim();
+            if (projectName.isEmpty()) projectName = "New AI Project";
             
             Project project = Project.builder()
                     .name(projectName)
-                    .description(projectDesc)
+                    .description("Created via Quantum AI Command Center.")
                     .workspace(workspace)
                     .status(ProjectStatus.ACTIVE)
                     .progress(0)
                     .build();
             projectRepository.save(project);
             
-            simulatedAiReply = "Project **" + projectName + "** has been successfully created and linked to your workspace.";
+            aiReply = "Project **" + projectName + "** has been successfully created and linked to your workspace.";
             actionTaken = "CREATE_PROJECT";
             
-        } else if (lowerQuery.contains("create task") || lowerQuery.contains("create issue") || lowerQuery.contains("add task") || lowerQuery.contains("add issue")) {
-            String taskTitle = "New Issue";
-            String taskDesc = "Created via Quantum AI Command Center.";
-            Project targetProject = null;
+        } else if (lowerQuery.startsWith("create task") || lowerQuery.startsWith("create issue")) {
+            String taskTitle = query.replaceFirst("(?i)(create task|create issue)", "").trim();
+            if (taskTitle.isEmpty()) taskTitle = "New AI Issue";
             
-            int index = -1;
-            if (lowerQuery.indexOf("create task") != -1) index = lowerQuery.indexOf("create task") + "create task".length();
-            else if (lowerQuery.indexOf("create issue") != -1) index = lowerQuery.indexOf("create issue") + "create issue".length();
-            else if (lowerQuery.indexOf("add task") != -1) index = lowerQuery.indexOf("add task") + "add task".length();
-            else if (lowerQuery.indexOf("add issue") != -1) index = lowerQuery.indexOf("add issue") + "add issue".length();
-            
-            if (index != -1 && index < query.length()) {
-                String remainder = query.substring(index).trim();
-                String[] parts = remainder.split("(?i)\\b(for project|project|in project)\\b", 2);
-                if (parts.length > 0 && !parts[0].trim().isEmpty()) {
-                    taskTitle = parts[0].trim();
-                }
-                if (parts.length > 1 && !parts[1].trim().isEmpty()) {
-                    String projName = parts[1].trim().replace("\"", "").replace("'", "");
-                    targetProject = projectRepository.findAll().stream()
-                            .filter(p -> p.getName().equalsIgnoreCase(projName))
-                            .findFirst()
-                            .orElse(null);
-                }
-            }
-            
-            if (targetProject == null) {
-                targetProject = projectRepository.findAll().stream().findFirst().orElse(null);
-            }
+            Project targetProject = projects.isEmpty() ? null : projects.get(0);
             
             if (targetProject == null) {
                 targetProject = Project.builder()
@@ -143,71 +116,61 @@ public class AiCommandService {
                         .description("Default project for tasks.")
                         .workspace(workspace)
                         .status(ProjectStatus.ACTIVE)
-                        .progress(20)
+                        .progress(0)
                         .build();
                 targetProject = projectRepository.save(targetProject);
             }
             
             Task task = Task.builder()
                     .title(taskTitle)
-                    .description(taskDesc)
+                    .description("Created via Quantum AI Command Center.")
                     .project(targetProject)
                     .status(TaskStatus.TODO)
                     .priority(TaskPriority.MEDIUM)
                     .build();
             taskRepository.save(task);
             
-            simulatedAiReply = "Issue **" + taskTitle + "** has been successfully created under the project **" + targetProject.getName() + "**.";
+            aiReply = "Issue **" + taskTitle + "** has been successfully created under the project **" + targetProject.getName() + "**.";
             actionTaken = "CREATE_TASK";
             
-        } else if (lowerQuery.contains("list projects") || lowerQuery.contains("show projects")) {
-            List<Project> projects = projectRepository.findAll();
-            if (projects.isEmpty()) {
-                simulatedAiReply = "There are currently no active projects in your workspace.";
-            } else {
-                StringBuilder sb = new StringBuilder("Here are the active projects in your workspace:\n\n");
-                for (Project p : projects) {
-                    sb.append("• **").append(p.getName()).append("**: ").append(p.getDescription() != null ? p.getDescription() : "No description").append(" (").append(p.getProgress() != null ? p.getProgress() : 0).append("% complete)\n");
-                }
-                simulatedAiReply = sb.toString();
-            }
-            actionTaken = "LIST_PROJECTS";
-            
-        } else if (lowerQuery.contains("list tasks") || lowerQuery.contains("show tasks") || lowerQuery.contains("what are my issues") || lowerQuery.contains("list issues") || lowerQuery.contains("show issues")) {
-            List<Task> tasks = taskRepository.findAll();
-            if (tasks.isEmpty()) {
-                simulatedAiReply = "There are currently no active issues or tasks in your workspace.";
-            } else {
-                StringBuilder sb = new StringBuilder("Here are the active tasks in your workspace:\n\n");
-                for (Task t : tasks) {
-                    sb.append("• **[").append(t.getPriority()).append("] ").append(t.getTitle()).append("**: ").append(t.getStatus()).append("\n");
-                }
-                simulatedAiReply = sb.toString();
-            }
-            actionTaken = "LIST_TASKS";
-            
         } else {
-            List<Project> projects = projectRepository.findAll();
-            List<Task> tasks = taskRepository.findAll();
-            
-            simulatedAiReply = "Hello! I am your Quantum AI workspace companion. I analyzed your environment:\n\n" +
-                    "• **Workspace**: " + workspace.getName() + "\n" +
-                    "• **Active Projects**: " + projects.size() + "\n" +
-                    "• **Total Tasks/Issues**: " + tasks.size() + "\n\n" +
-                    "You can ask me to **create project [name]**, **create task [title]**, **list projects**, or **list tasks** directly from this chat!";
+            // Let the LLM handle conversational queries
+            ChatModel chatModel = null;
+            try {
+                chatModel = chatModelProvider.getIfAvailable();
+            } catch (Exception e) {
+                // Bean creation failed (e.g. Ollama not running)
+            }
+            if (chatModel != null) {
+                try {
+                    String contextStr = "Workspace: " + workspace.getName() + "\n" +
+                        "Active Projects: " + projects.stream().map(Project::getName).collect(Collectors.joining(", ")) + "\n" +
+                        "Total Tasks: " + tasks.size();
+
+                    String fullPrompt = "You are Quantum AI, an intelligent workspace assistant inside QuantumOS. " +
+                        "Provide helpful, concise, and professional responses based on the user's workspace context.\n\n" +
+                        "Context:\n" + contextStr + "\n\nUser Question:\n" + query;
+                        
+                    aiReply = chatModel.call(fullPrompt);
+                } catch (Exception e) {
+                    aiReply = "I am currently unable to reach the AI engine (Ollama may be offline). However, you can still ask me to 'create project [name]' or 'create task [title]'.";
+                }
+            } else {
+                aiReply = "The AI model provider is not configured or available. You can still use explicit commands like 'create project [name]' or 'create task [title]'.";
+            }
         }
 
         // Save AI Message
-        AiMessage aiMessage = AiMessage.builder()
+        AiMessage aiMessageObj = AiMessage.builder()
                 .conversation(conversation)
                 .role(AiRole.ASSISTANT)
-                .content(simulatedAiReply)
+                .content(aiReply)
                 .build();
-        messageRepository.save(aiMessage);
+        messageRepository.save(aiMessageObj);
 
         return AiCommandResponse.builder()
                 .conversationId(conversation.getId())
-                .reply(simulatedAiReply)
+                .reply(aiReply)
                 .actionTaken(actionTaken)
                 .build();
     }

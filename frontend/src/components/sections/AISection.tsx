@@ -92,10 +92,8 @@ export default function AISection() {
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-400 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.15)]">
                     <Sparkles size={14} className="text-zinc-950" />
                   </div>
-                  <div className="flex-1 space-y-3 pt-1">
-                    <div className="h-4 w-3/4 bg-white/10 rounded animate-pulse" />
-                    <div className="h-4 w-full bg-white/10 rounded animate-pulse" style={{ animationDelay: '120ms' }} />
-                    <div className="h-4 w-5/6 bg-white/10 rounded animate-pulse" style={{ animationDelay: '240ms' }} />
+                  <div className="flex-1 pt-0.5 text-zinc-300 text-[15px] leading-relaxed font-light">
+                    The latest updates in <span className="text-white font-medium">api-gateway</span> include migrating authentication to the new JWT service and adding rate limiting to the core endpoints. These changes successfully passed CI/CD pipeline and were merged by <span className="text-zinc-400">@sarah</span> 2 hours ago.
                   </div>
                 </div>
 

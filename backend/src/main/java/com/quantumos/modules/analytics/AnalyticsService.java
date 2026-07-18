@@ -30,6 +30,22 @@ public class AnalyticsService {
                 .reviewTasks(review)
                 .todoTasks(todo)
                 .completionPercentage(percentage)
+                // New mock/computed metrics for UI
+                .velocity("42 pts")
+                .cycleTime("2.1d")
+                .throughput(String.valueOf(completed))
+                .teamLoad("78%")
+                .activeIssues(total - completed)
+                .resolved7d(completed)
+                .avgResolution("2.1d")
+                .blockers(review)
+                .weeklyData(java.util.List.of(65, 72, 58, 81, 76, 89, 94))
+                .projectBreakdown(java.util.List.of(
+                        DashboardMetricsResponse.ProjectBreakdown.builder().name("API Gateway").value(34).color("bg-zinc-300").build(),
+                        DashboardMetricsResponse.ProjectBreakdown.builder().name("Mobile App").value(28).color("bg-zinc-500").build(),
+                        DashboardMetricsResponse.ProjectBreakdown.builder().name("Design System").value(22).color("bg-zinc-400").build(),
+                        DashboardMetricsResponse.ProjectBreakdown.builder().name("Security").value(16).color("bg-zinc-600").build()
+                ))
                 .build();
     }
 }

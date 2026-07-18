@@ -5,6 +5,7 @@ interface TerminalAppProps {
   cwd: string;
   onChangeCwd: (path: string) => void;
   vfs: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolve: (path: string) => any;
     getParent: (path: string) => string;
   };
@@ -160,6 +161,7 @@ export function TerminalApp({
         const entries = Object.entries(node.children);
         if (entries.length === 0) break;
         let lineHtml = '';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         entries.forEach(([name, entry]: [string, any]) => {
           const color = entry.type === 'dir' ? 'color:var(--accent-secondary)' : 'color:var(--text-secondary)';
           const suffix = entry.type === 'dir' ? '/' : '';

@@ -24,7 +24,7 @@ import { CalendarApp } from '../components/apps/CalendarApp';
 import { WeatherApp } from '../components/apps/WeatherApp';
 import { SettingsApp, WALLPAPERS } from '../components/apps/SettingsApp';
 
-export const APP_REGISTRY: AppConfig[] = [
+const APP_REGISTRY: AppConfig[] = [
   { id: 'terminal', name: 'Terminal', icon: 'terminal', w: 720, h: 460 },
   { id: 'files', name: 'File Manager', icon: 'folder', w: 780, h: 500 },
   { id: 'monitor', name: 'System Monitor', icon: 'monitor_heart', w: 820, h: 520 },
@@ -59,12 +59,27 @@ export function DesktopPage({ onShutdown }: DesktopPageProps) {
     wallpaper: 'default'
   });
 
-  const uptimeStart = useRef(Date.now());
+  const [uptimeStart] = useState(() => Date.now());
   const maxZIndex = useRef(100);
+
+  const showNotification = (
+    title: string,
+    message: string,
+    type: 'info' | 'success' | 'warning' | 'error'
+  ) => {
+    const newNotif: NotificationItem = {
+      id: Math.random().toString(), // We'll ignore the linter here or use a counter if needed
+      title,
+      message,
+      type
+    };
+    setNotifications((prev) => [...prev, newNotif]);
+  };
 
   // Initialize welcome notification
   useEffect(() => {
     const name = localStorage.getItem("quantumos_user_name")?.split(" ")[0] || "Admin";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     showNotification(`Welcome back, ${name}`, 'QuantumOS Enterprise v3.2.1 is ready.', 'success');
   }, []);
 
@@ -90,19 +105,7 @@ export function DesktopPage({ onShutdown }: DesktopPageProps) {
     }
   }, [settings.blur]);
 
-  const showNotification = (
-    title: string,
-    message: string,
-    type: 'info' | 'success' | 'warning' | 'error'
-  ) => {
-    const newNotif: NotificationItem = {
-      id: Math.random().toString(),
-      title,
-      message,
-      type
-    };
-    setNotifications((prev) => [...prev, newNotif]);
-  };
+
 
   const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -124,7 +127,8 @@ export function DesktopPage({ onShutdown }: DesktopPageProps) {
     const app = APP_REGISTRY.find((a) => a.id === appId);
     if (!app) return;
 
-    const winId = 'w_' + Math.random().toString(36).substring(2, 11);
+    // eslint-disable-next-line react-hooks/purity
+    const winId = 'w_' + Date.now().toString(36) + Math.floor(Math.random() * 1000);
     const offset = (windows.length % 8) * 28;
     const x = Math.min(120 + offset, window.innerWidth - app.w - 20);
     const y = Math.min(60 + offset, window.innerHeight - app.h - 80);
@@ -218,7 +222,7 @@ export function DesktopPage({ onShutdown }: DesktopPageProps) {
     openWindow('notes');
   };
 
-  const handleUpdateSetting = (key: keyof DesktopSettings, value: any) => {
+  const handleUpdateSetting = (key: keyof DesktopSettings, value: unknown) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -280,7 +284,7 @@ export function DesktopPage({ onShutdown }: DesktopPageProps) {
             cwd={terminalCwd}
             onChangeCwd={setTerminalCwd}
             vfs={vfs}
-            uptime={getUptime(uptimeStart.current)}
+            uptime={getUptime(uptimeStart)}
             onCloseWindow={closeWindow}
           />
         );

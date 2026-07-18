@@ -18,10 +18,16 @@ public class ProjectService {
     private final WorkspaceRepository workspaceRepository; // Note: Need to create this interface soon
 
     @Transactional
-    public Project createProject(ProjectRequest request) {
-        // TODO: Implement RBAC - ensure current user is part of the workspace
+    public Project createProject(ProjectRequest request, com.quantumos.modules.user.User user) {
         Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
                 .orElseThrow(() -> new IllegalArgumentException("Workspace not found"));
+                
+        boolean isMember = workspace.getMembers().stream()
+                .anyMatch(m -> m.getUser().getId().equals(user.getId()));
+                
+        if (!isMember) {
+            throw new org.springframework.security.access.AccessDeniedException("User is not a member of this workspace");
+        }
 
         Project project = Project.builder()
                 .name(request.getName())

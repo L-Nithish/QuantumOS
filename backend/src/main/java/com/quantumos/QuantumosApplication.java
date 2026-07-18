@@ -13,6 +13,11 @@ public class QuantumosApplication {
 		SpringApplication.run(QuantumosApplication.class, args);
 	}
 
+	@org.springframework.context.annotation.Bean
+	public org.springframework.web.client.RestClient.Builder restClientBuilder() {
+		return org.springframework.web.client.RestClient.builder();
+	}
+
 	@Bean
 	public CommandLineRunner initDatabaseSchema(JdbcTemplate jdbcTemplate) {
 		return args -> {

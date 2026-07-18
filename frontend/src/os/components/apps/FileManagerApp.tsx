@@ -45,6 +45,7 @@ export function FileManagerApp({
         }
         return a[1].type === 'dir' ? -1 : 1;
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEntries(sortedEntries);
     } else {
       setEntries([]);

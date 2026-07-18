@@ -42,6 +42,7 @@ const WALLPAPERS: WallpaperOption[] = [
 
 interface SettingsAppProps {
   settings: DesktopSettings;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateSetting: (key: keyof DesktopSettings, value: any) => void;
   onShowNotification: (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error', duration?: number) => void;
 }

@@ -26,17 +26,17 @@ const features = [
         <div className="space-y-3">
           <div className="bg-[#121214] border border-white/[0.04] p-4 rounded-xl flex items-center justify-between hover:border-white/10 transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-zinc-400" />
-              <div className="w-36 h-2.5 bg-white/10 rounded" />
+              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-sm text-zinc-200 font-medium tracking-wide">Frontend UI Revamp</span>
             </div>
-            <div className="w-14 h-2 bg-white/5 rounded" />
+            <span className="text-[10px] text-zinc-500 font-mono bg-white/[0.03] px-2 py-1 rounded">IN PROGRESS</span>
           </div>
           <div className="bg-[#121214] border border-white/[0.04] p-4 rounded-xl flex items-center justify-between hover:border-white/10 transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-zinc-500" />
-              <div className="w-28 h-2.5 bg-white/10 rounded" />
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="text-sm text-zinc-200 font-medium tracking-wide">API Gateway Migration</span>
             </div>
-            <div className="w-14 h-2 bg-white/5 rounded" />
+            <span className="text-[10px] text-zinc-500 font-mono bg-white/[0.03] px-2 py-1 rounded">REVIEW</span>
           </div>
         </div>
       </div>

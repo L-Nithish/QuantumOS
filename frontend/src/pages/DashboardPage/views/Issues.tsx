@@ -14,18 +14,9 @@ export default function Issues() {
   const [loading, setLoading] = useState(true);
 
   // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(() => !!location.state?.openModal);
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "MEDIUM", projectId: "" });
   const [creating, setCreating] = useState(false);
-
-  useEffect(() => {
-    fetchData();
-    if (location.state?.openModal) {
-      setIsModalOpen(true);
-      // Clean up the location state so it doesn't reopen if refreshed
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
 
   const fetchData = async () => {
     try {
@@ -42,6 +33,15 @@ export default function Issues() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+    if (location.state?.openModal) {
+      // Clean up the location state so it doesn't reopen if refreshed
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();

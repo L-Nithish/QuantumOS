@@ -20,8 +20,9 @@ export default function LoginPage() {
     try {
       await authService.login(email, password);
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to sign in. Please check your credentials.");
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || "Failed to sign in. Please check your credentials.");
     } finally {
       setLoading(false);
     }

@@ -1,29 +1,36 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
-  Activity, Target, CheckCircle2, Circle, Zap, Sparkles, Clock
+  Activity, Target, CheckCircle2, Circle, Clock
 } from "lucide-react";
 import { projectService, type Project } from "../../../api/projectService";
 import { taskService, type Task } from "../../../api/taskService";
 import { activityService, type ActivityLog } from "../../../api/activityService";
+import { workspaceService } from "../../../api/workspaceService";
+import { analyticsService } from "../../../api/analyticsService";
+import type { DashboardMetricsResponse } from "../../../api/analyticsService";
 
 export default function Overview() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [metrics, setMetrics] = useState<DashboardMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [projectsData, tasksData, activitiesData] = await Promise.all([
+        const ws = await workspaceService.getDefaultWorkspace();
+        const [projectsData, tasksData, activitiesData, metricsData] = await Promise.all([
           projectService.getAllProjects(),
           taskService.getAllTasks(),
-          activityService.getAllActivity()
+          activityService.getAllActivity(),
+          analyticsService.getWorkspaceDashboard(ws.id)
         ]);
         setProjects(projectsData);
         setTasks(tasksData);
         setActivities(activitiesData);
+        setMetrics(metricsData);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -53,10 +60,10 @@ export default function Overview() {
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Active Issues" value={tasks.length.toString()} trend="+12%" positive />
-        <MetricCard title="Resolved (7d)" value="0" trend="0" positive />
-        <MetricCard title="Avg Resolution" value="0d" trend="0" positive />
-        <MetricCard title="Blockers" value="0" trend="0" positive={false} />
+        <MetricCard title="Active Issues" value={loading ? "-" : (metrics?.activeIssues.toString() || "0")} trend="+12%" positive />
+        <MetricCard title="Resolved (7d)" value={loading ? "-" : (metrics?.resolved7d.toString() || "0")} trend="0" positive />
+        <MetricCard title="Avg Resolution" value={loading ? "-" : (metrics?.avgResolution || "0d")} trend="0" positive />
+        <MetricCard title="Blockers" value={loading ? "-" : (metrics?.blockers.toString() || "0")} trend="0" positive={false} />
       </div>
 
       {/* Main Content Area */}
@@ -81,7 +88,7 @@ export default function Overview() {
                   <ProjectRow 
                     key={p.id || i}
                     name={p.name} 
-                    progress={p.progress || Math.floor(Math.random() * 100)} 
+                    progress={p.progress ?? 0} 
                     team={p.teamName || "Engineering"} 
                     status={p.status || "On Track"} 
                     color={i % 2 === 0 ? "from-zinc-400 to-zinc-600" : "from-zinc-500 to-zinc-700"} 
@@ -125,31 +132,7 @@ export default function Overview() {
         {/* Right Column (Narrower) */}
         <div className="space-y-6">
           
-          {/* AI Assistant Panel */}
-          <div className="bg-gradient-to-b from-zinc-200/[0.02] to-transparent border border-white/[0.05] rounded-xl overflow-hidden relative shadow-sm">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-[50px] rounded-full pointer-events-none" />
-            <div className="px-5 py-4 flex items-center gap-2">
-              <Sparkles size={16} className="text-zinc-300" />
-              <h2 className="text-[14px] font-semibold text-zinc-200">AI Assistant</h2>
-            </div>
-            <div className="px-5 pb-5">
-              <p className="text-[13px] text-zinc-400 leading-relaxed mb-4">
-                Based on recent activity, velocity has increased by 12%. I've identified 3 tasks that can be automated.
-              </p>
-              <div className="space-y-2">
-                <div className="bg-black/10 border border-white/[0.04] p-3 rounded-lg flex items-start gap-3">
-                  <Zap size={14} className="text-zinc-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-[12px] text-zinc-200 font-medium">Auto-assign tickets</p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">Route incoming bugs to available engineers.</p>
-                  </div>
-                </div>
-                <Link to="/ai-command-center" className="block w-full py-2 text-center text-[12px] font-medium text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-lg transition-colors">
-                  Open AI Command Center
-                </Link>
-              </div>
-            </div>
-          </div>
+          {/* AI Assistant Panel Removed */}
 
           {/* Team Activity */}
           <div className="bg-[#121214] border border-white/[0.05] rounded-xl overflow-hidden shadow-sm">

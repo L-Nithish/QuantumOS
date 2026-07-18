@@ -2,6 +2,7 @@ package com.quantumos.modules.ai;
 
 import com.quantumos.modules.ai.dto.AiCommandRequest;
 import com.quantumos.modules.ai.dto.AiCommandResponse;
+import com.quantumos.modules.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,12 @@ public class AiCommandController {
     public ResponseEntity<AiCommandResponse> processCommand(
             @RequestBody AiCommandRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(aiCommandService.processCommand(request, userDetails.getUser()));
+        try {
+            User user = userDetails != null ? userDetails.getUser() : null;
+            return ResponseEntity.ok(aiCommandService.processCommand(request, user));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

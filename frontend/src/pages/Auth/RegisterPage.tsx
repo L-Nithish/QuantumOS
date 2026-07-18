@@ -24,8 +24,9 @@ export default function RegisterPage() {
     try {
       await authService.register(form.email, form.password, form.name);
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to create account. Please try again.");
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }

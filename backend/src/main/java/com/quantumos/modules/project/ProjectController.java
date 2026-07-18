@@ -16,8 +16,10 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping
-    public ResponseEntity<Project> createProject(@RequestBody ProjectRequest request) {
-        return ResponseEntity.ok(projectService.createProject(request));
+    public ResponseEntity<Project> createProject(
+            @RequestBody ProjectRequest request,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.quantumos.security.CustomUserDetails userDetails) {
+        return ResponseEntity.ok(projectService.createProject(request, userDetails.getUser()));
     }
 
     @GetMapping

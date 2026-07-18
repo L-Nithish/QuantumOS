@@ -20,4 +20,10 @@ public class BillingController {
     public ResponseEntity<Subscription> getWorkspaceSubscription(@PathVariable UUID workspaceId) {
         return ResponseEntity.ok(subscriptionService.getWorkspaceSubscription(workspaceId));
     }
+
+    @org.springframework.web.bind.annotation.PostMapping("/webhook/stripe")
+    public ResponseEntity<String> handleStripeWebhook(@org.springframework.web.bind.annotation.RequestBody java.util.Map<String, Object> payload) {
+        subscriptionService.processStripeWebhook(payload);
+        return ResponseEntity.ok("Webhook processed");
+    }
 }

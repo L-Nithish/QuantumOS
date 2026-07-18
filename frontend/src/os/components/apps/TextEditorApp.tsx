@@ -36,6 +36,7 @@ export function TextEditorApp({
 
   // Sync content when initialContent changes (e.g. user opens a file from file manager)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setContent(initialContent);
   }, [initialContent]);
 
