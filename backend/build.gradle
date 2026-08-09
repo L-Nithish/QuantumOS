@@ -25,6 +25,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation('org.springframework.ai:spring-ai-ollama-spring-boot-starter:1.0.0-M1') {
 		exclude group: 'org.springframework.cloud', module: 'spring-cloud-function-context'
 	}

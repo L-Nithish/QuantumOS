@@ -18,7 +18,7 @@ public class AnalyticsService {
         long total = taskRepository.countTotalTasksByWorkspace(workspaceId);
         long completed = taskRepository.countTasksByWorkspaceAndStatus(workspaceId, TaskStatus.DONE);
         long inProgress = taskRepository.countTasksByWorkspaceAndStatus(workspaceId, TaskStatus.IN_PROGRESS);
-        long review = taskRepository.countTasksByWorkspaceAndStatus(workspaceId, TaskStatus.REVIEW);
+        long review = taskRepository.countTasksByWorkspaceAndStatus(workspaceId, TaskStatus.IN_REVIEW);
         long todo = taskRepository.countTasksByWorkspaceAndStatus(workspaceId, TaskStatus.TODO);
 
         double percentage = total == 0 ? 0 : Math.round(((double) completed / total) * 100.0);

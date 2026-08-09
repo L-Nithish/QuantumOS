@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 @Service
 @RequiredArgsConstructor
 public class TaskService {
@@ -19,6 +21,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public Task createTask(TaskRequest request) {
@@ -41,7 +44,9 @@ public class TaskService {
                 .dueDate(request.getDueDate())
                 .build();
 
-        return taskRepository.save(task);
+        task = taskRepository.save(task);
+        messagingTemplate.convertAndSend("/topic/tasks", task);
+        return task;
     }
 
     public List<Task> getAllTasks() {
@@ -57,6 +62,8 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
         task.setStatus(status);
-        return taskRepository.save(task);
+        task = taskRepository.save(task);
+        messagingTemplate.convertAndSend("/topic/tasks", task);
+        return task;
     }
 }

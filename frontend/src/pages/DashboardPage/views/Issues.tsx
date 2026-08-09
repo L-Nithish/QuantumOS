@@ -1,10 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { 
   Search, CheckCircle2, Circle, Clock, Play, X, Plus
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { taskService, type Task } from "../../../api/taskService";
 import { projectService, type Project } from "../../../api/projectService";
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+
+const COLUMNS = [
+  { id: "BACKLOG", title: "Backlog" },
+  { id: "TODO", title: "To Do" },
+  { id: "IN_PROGRESS", title: "In Progress" },
+  { id: "IN_REVIEW", title: "In Review" },
+  { id: "DONE", title: "Done" }
+];
 
 export default function Issues() {
   const location = useLocation();
@@ -38,9 +49,34 @@ export default function Issues() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
     if (location.state?.openModal) {
-      // Clean up the location state so it doesn't reopen if refreshed
       window.history.replaceState({}, document.title);
     }
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      onConnect: () => {
+        client.subscribe('/topic/tasks', (message) => {
+          const updatedTask = JSON.parse(message.body) as Task;
+          setIssues((prev) => {
+            const exists = prev.find(t => t.id === updatedTask.id);
+            if (exists) {
+              return prev.map(t => t.id === updatedTask.id ? updatedTask : t);
+            } else {
+              return [updatedTask, ...prev];
+            }
+          });
+        });
+      },
+      debug: (str) => {
+        console.log(str);
+      },
+    });
+
+    client.activate();
+
+    return () => {
+      client.deactivate();
+    };
   }, [location.state]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
@@ -49,7 +85,7 @@ export default function Issues() {
 
     try {
       setCreating(true);
-      const created = await taskService.createTask(newTask);
+      const created = await taskService.createTask({...newTask, status: "TODO"});
       setIssues([created, ...issues]);
       setIsModalOpen(false);
       setNewTask({ title: "", description: "", priority: "MEDIUM", projectId: "" });
@@ -60,11 +96,6 @@ export default function Issues() {
       setCreating(false);
     }
   };
-
-  const filteredIssues = issues.filter(issue => {
-    if (filter === "all") return true;
-    return issue.status?.toLowerCase() === filter.toLowerCase();
-  });
 
   const getStatusIcon = (status: string | null | undefined = "TODO") => {
     const s = status || "TODO";
@@ -92,11 +123,42 @@ export default function Issues() {
     );
   };
 
+  const onDragEnd = useCallback(async (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const newStatus = destination.droppableId;
+    
+    // Optimistic UI update
+    setIssues(prev => prev.map(issue => 
+      issue.id === draggableId ? { ...issue, status: newStatus } : issue
+    ));
+
+    try {
+      await taskService.updateTaskStatus(draggableId, newStatus);
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+      // Revert on failure
+      fetchData(); 
+    }
+  }, []);
+
+  const getFilteredIssues = () => {
+    return issues.filter(issue => {
+      if (filter === "all") return true;
+      return issue.status?.toLowerCase() === filter.toLowerCase();
+    });
+  };
+
+  const filteredIssues = getFilteredIssues();
+
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6 relative">
+    <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6 relative h-[calc(100vh-4rem)] flex flex-col">
       
       {/* Title */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight">Issues</h1>
           <p className="text-[13px] text-zinc-400 mt-1">Track work across teams, sprints, and epics.</p>
@@ -110,7 +172,7 @@ export default function Issues() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] pb-4">
+      <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] pb-4 shrink-0">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
           {["all", "todo", "in_progress", "in_review", "done", "backlog"].map(s => (
             <button
@@ -135,39 +197,96 @@ export default function Issues() {
         </div>
       </div>
 
-      {/* Issues List */}
-      <div className="bg-[#121214] border border-white/[0.05] rounded-xl overflow-hidden shadow-sm">
+      {/* Kanban Board */}
+      <div className="flex-1 overflow-x-auto pb-4 hide-scrollbar">
         {loading ? (
            <div className="p-12 text-center text-zinc-500 text-sm">Loading issues...</div>
-        ) : filteredIssues.length === 0 ? (
-          <div className="p-12 text-center text-zinc-500 text-sm">No issues found.</div>
-        ) : (
-          <div className="divide-y divide-white/[0.03]">
-            {filteredIssues.map(issue => (
-              <div key={issue.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.01] cursor-pointer transition-colors group">
-                <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
-                  <span className="shrink-0">{getStatusIcon(issue.status)}</span>
-                  <span className="text-[12px] font-mono text-zinc-500 shrink-0">{issue.id.substring(0, 8).toUpperCase()}</span>
-                  <span className="text-[13px] text-zinc-200 truncate group-hover:text-zinc-100 transition-colors">{issue.title}</span>
-                </div>
-                
-                <div className="flex items-center gap-4 md:gap-6 shrink-0">
-                  <span className="hidden md:inline-block text-[12px] text-zinc-500 font-medium truncate w-24">
-                    {projects.find(p => p.id === issue.projectId)?.name || "Project"}
-                  </span>
-                  {getPriorityBadge(issue.priority)}
-                  
-                  <div className="hidden sm:flex items-center gap-2 w-24 justify-end">
-                    <div className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[9px] font-bold text-zinc-400">
-                      U
+        ) : filter === "all" ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="flex gap-6 h-full items-start min-w-max">
+              {COLUMNS.map(column => {
+                const columnIssues = issues.filter(i => (i.status || "TODO").toUpperCase() === column.id);
+                return (
+                  <div key={column.id} className="w-80 flex flex-col h-full">
+                    <div className="flex items-center gap-2 mb-3 shrink-0">
+                      <h3 className="text-[13px] font-medium text-zinc-200">{column.title}</h3>
+                      <span className="text-[11px] font-medium text-zinc-500 bg-white/[0.03] px-2 py-0.5 rounded-full">
+                        {columnIssues.length}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-zinc-400 truncate w-14">Unassigned</span>
+                    
+                    <Droppable droppableId={column.id}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`flex-1 rounded-xl p-2 transition-colors ${
+                            snapshot.isDraggingOver ? "bg-white/[0.02]" : "bg-transparent"
+                          }`}
+                        >
+                          <div className="flex flex-col gap-2">
+                            {columnIssues.map((issue, index) => (
+                              <Draggable key={issue.id} draggableId={issue.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`bg-[#121214] border rounded-lg p-3 group transition-shadow ${
+                                      snapshot.isDragging ? "border-zinc-700 shadow-xl opacity-90" : "border-white/[0.05] hover:border-white/10"
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <span className="text-[12px] font-mono text-zinc-500 shrink-0">{issue.id.substring(0, 8).toUpperCase()}</span>
+                                      {getPriorityBadge(issue.priority)}
+                                    </div>
+                                    <p className="text-[13px] text-zinc-200 mb-3 line-clamp-2 leading-relaxed">{issue.title}</p>
+                                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/[0.02]">
+                                      <span className="text-[11px] text-zinc-500 font-medium truncate max-w-[120px]">
+                                        {projects.find(p => p.id === issue.projectId)?.name || "Project"}
+                                      </span>
+                                      <div className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[9px] font-bold text-zinc-400">
+                                        U
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
-                  
-                  <span className="hidden sm:inline-block text-[11px] text-zinc-600 w-16 text-right">Today</span>
-                </div>
+                );
+              })}
+            </div>
+          </DragDropContext>
+        ) : (
+          <div className="bg-[#121214] border border-white/[0.05] rounded-xl overflow-hidden shadow-sm">
+            {filteredIssues.length === 0 ? (
+              <div className="p-12 text-center text-zinc-500 text-sm">No issues found.</div>
+            ) : (
+              <div className="divide-y divide-white/[0.03]">
+                {filteredIssues.map(issue => (
+                  <div key={issue.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.01] cursor-pointer transition-colors group">
+                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
+                      <span className="shrink-0">{getStatusIcon(issue.status)}</span>
+                      <span className="text-[12px] font-mono text-zinc-500 shrink-0">{issue.id.substring(0, 8).toUpperCase()}</span>
+                      <span className="text-[13px] text-zinc-200 truncate group-hover:text-zinc-100 transition-colors">{issue.title}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 md:gap-6 shrink-0">
+                      <span className="hidden md:inline-block text-[12px] text-zinc-500 font-medium truncate w-24">
+                        {projects.find(p => p.id === issue.projectId)?.name || "Project"}
+                      </span>
+                      {getPriorityBadge(issue.priority)}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
@@ -221,9 +340,6 @@ export default function Issues() {
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
-                  {projects.length === 0 && (
-                    <p className="text-[11px] text-red-400 mt-1">You must create a Project first.</p>
-                  )}
                 </div>
                 
                 <div className="space-y-1.5">

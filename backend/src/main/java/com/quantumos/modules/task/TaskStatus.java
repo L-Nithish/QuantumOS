@@ -1,8 +1,9 @@
 package com.quantumos.modules.task;
 
 public enum TaskStatus {
+    BACKLOG,
     TODO,
     IN_PROGRESS,
-    REVIEW,
+    IN_REVIEW,
     DONE
 }
