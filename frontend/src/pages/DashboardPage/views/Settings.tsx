@@ -27,6 +27,9 @@ export default function Settings() {
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
 
   useEffect(() => {
     userService.getCurrentUser().then(setProfile).catch(console.error);
@@ -51,6 +54,26 @@ export default function Settings() {
       } finally {
         setSaving(false);
       }
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.new !== passwordForm.confirm) {
+      alert("New passwords do not match");
+      return;
+    }
+    setSaving(true);
+    try {
+      // Mock API call
+      await new Promise(res => setTimeout(res, 1000));
+      alert("Password changed successfully");
+      setShowPasswordForm(false);
+      setPasswordForm({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      alert("Failed to change password");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -144,14 +167,55 @@ export default function Settings() {
           {activeTab === "security" && (
             <>
               <h2 className="text-[15px] font-semibold text-zinc-200">Security</h2>
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-4 bg-charcoal rounded-lg border border-white/[0.04] hover:border-white/[0.08] transition-colors text-left">
-                  <Lock size={18} className="text-zinc-400" />
-                  <div>
-                    <p className="text-[13px] text-zinc-200">Change password</p>
-                    <p className="text-[12px] text-zinc-500">Last changed 30 days ago</p>
-                  </div>
-                </button>
+              <div className="space-y-4">
+                {!showPasswordForm ? (
+                  <button 
+                    onClick={() => setShowPasswordForm(true)}
+                    className="w-full flex items-center gap-3 p-4 bg-charcoal rounded-lg border border-white/[0.04] hover:border-white/[0.08] transition-colors text-left"
+                  >
+                    <Lock size={18} className="text-zinc-400" />
+                    <div>
+                      <p className="text-[13px] text-zinc-200">Change password</p>
+                      <p className="text-[12px] text-zinc-500">Last changed 30 days ago</p>
+                    </div>
+                  </button>
+                ) : (
+                  <form onSubmit={handlePasswordChange} className="p-4 bg-charcoal rounded-lg border border-white/[0.04] space-y-3">
+                    <h3 className="text-[13px] font-medium text-zinc-200 mb-2">Change Password</h3>
+                    <div>
+                      <label className="text-[12px] text-zinc-500 mb-1 block">Current Password</label>
+                      <input 
+                        type="password" required 
+                        value={passwordForm.current} onChange={e => setPasswordForm(f => ({...f, current: e.target.value}))}
+                        className="w-full bg-graphite border border-white/[0.06] rounded-md px-3 py-1.5 text-sm text-zinc-200 outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[12px] text-zinc-500 mb-1 block">New Password</label>
+                      <input 
+                        type="password" required 
+                        value={passwordForm.new} onChange={e => setPasswordForm(f => ({...f, new: e.target.value}))}
+                        className="w-full bg-graphite border border-white/[0.06] rounded-md px-3 py-1.5 text-sm text-zinc-200 outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[12px] text-zinc-500 mb-1 block">Confirm New Password</label>
+                      <input 
+                        type="password" required 
+                        value={passwordForm.confirm} onChange={e => setPasswordForm(f => ({...f, confirm: e.target.value}))}
+                        className="w-full bg-graphite border border-white/[0.06] rounded-md px-3 py-1.5 text-sm text-zinc-200 outline-none" 
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button type="submit" disabled={saving} className="px-3 py-1.5 text-[12px] font-medium text-zinc-950 bg-white rounded-md disabled:opacity-50">
+                        {saving ? "Saving..." : "Update"}
+                      </button>
+                      <button type="button" onClick={() => setShowPasswordForm(false)} className="px-3 py-1.5 text-[12px] font-medium text-zinc-300 hover:text-white rounded-md">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
                 <button className="w-full flex items-center gap-3 p-4 bg-charcoal rounded-lg border border-white/[0.04] hover:border-white/[0.08] transition-colors text-left">
                   <Shield size={18} className="text-zinc-400" />
                   <div>
@@ -159,6 +223,26 @@ export default function Settings() {
                     <p className="text-[12px] text-zinc-500">Enabled via authenticator app</p>
                   </div>
                 </button>
+                
+                <div className="pt-4 mt-4 border-t border-white/[0.05]">
+                  <h3 className="text-[14px] font-semibold text-zinc-200 mb-3">Active Sessions</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-charcoal rounded-lg border border-white/[0.04]">
+                      <div>
+                        <p className="text-[13px] text-zinc-200">Windows 11 • Chrome</p>
+                        <p className="text-[11px] text-zinc-500">New York, US • Active now</p>
+                      </div>
+                      <span className="text-[11px] px-2 py-1 bg-white/10 text-zinc-300 rounded">Current session</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-charcoal rounded-lg border border-white/[0.04]">
+                      <div>
+                        <p className="text-[13px] text-zinc-200">iOS 17 • Safari</p>
+                        <p className="text-[11px] text-zinc-500">New York, US • Last active 2h ago</p>
+                      </div>
+                      <button className="text-[11px] px-2 py-1 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors">Revoke</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
           )}

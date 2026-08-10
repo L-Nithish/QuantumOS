@@ -1,29 +1,35 @@
 package com.quantumos.modules.billing;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/billing")
-@RequiredArgsConstructor
 public class BillingController {
 
-    private final SubscriptionService subscriptionService;
-
-    @GetMapping("/workspace/{workspaceId}")
-    public ResponseEntity<Subscription> getWorkspaceSubscription(@PathVariable UUID workspaceId) {
-        return ResponseEntity.ok(subscriptionService.getWorkspaceSubscription(workspaceId));
+    @GetMapping("/plans")
+    public ResponseEntity<List<Map<String, Object>>> getPlans() {
+        return ResponseEntity.ok(List.of(
+            Map.of("id", "basic", "name", "Basic Plan", "price", 9.99),
+            Map.of("id", "pro", "name", "Pro Plan", "price", 29.99)
+        ));
     }
 
-    @org.springframework.web.bind.annotation.PostMapping("/webhook/stripe")
-    public ResponseEntity<String> handleStripeWebhook(@org.springframework.web.bind.annotation.RequestBody java.util.Map<String, Object> payload) {
-        subscriptionService.processStripeWebhook(payload);
-        return ResponseEntity.ok("Webhook processed");
+    @GetMapping("/invoices")
+    public ResponseEntity<List<Map<String, Object>>> getInvoices(@RequestParam Long userId) {
+        return ResponseEntity.ok(List.of(
+            Map.of("id", "INV-001", "amount", 9.99, "status", "PAID", "date", "2023-10-01"),
+            Map.of("id", "INV-002", "amount", 29.99, "status", "PENDING", "date", "2023-11-01")
+        ));
+    }
+
+    @GetMapping("/payment-methods")
+    public ResponseEntity<List<Map<String, Object>>> getPaymentMethods(@RequestParam Long userId) {
+        return ResponseEntity.ok(List.of(
+            Map.of("id", "pm_1", "type", "credit_card", "last4", "4242"),
+            Map.of("id", "pm_2", "type", "paypal", "email", "user@example.com")
+        ));
     }
 }

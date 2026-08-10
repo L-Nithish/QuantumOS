@@ -1,8 +1,11 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Search, Bell, Settings, Plus, LayoutDashboard,
-  Target, Activity, BarChart3, Users, ListTodo, ChevronDown, Monitor
+  Target, Activity, BarChart3, Users, ListTodo, ChevronDown, Monitor,
+  CreditCard, Shield, Globe, HelpCircle
 } from "lucide-react";
+import CommandPalette from "../ui/CommandPalette";
+import KeyboardShortcuts from "../ui/KeyboardShortcuts";
 
 const navGroups: {
   label: string | null;
@@ -22,6 +25,14 @@ const navGroups: {
       { to: "/dashboard/issues", icon: Activity, label: "Issues" },
       { to: "/analytics", icon: BarChart3, label: "Analytics" },
       { to: "/team", icon: Users, label: "Team" },
+      { to: "/dashboard/billing", icon: CreditCard, label: "Billing" },
+      { to: "/dashboard/workspace/settings", icon: Globe, label: "Workspace Settings" },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [
+      { to: "/dashboard/admin/users", icon: Shield, label: "Admin Panel" },
     ],
   },
   {
@@ -42,6 +53,14 @@ const pageTitles: Record<string, string> = {
   "/ai-command-center": "AI Command Center",
   "/dashboard/issues": "Issues",
   "/dashboard/overview": "Overview",
+  "/dashboard/notifications": "Notifications",
+  "/dashboard/billing": "Billing",
+  "/dashboard/workspace/create": "Create Workspace",
+  "/dashboard/workspace/settings": "Workspace Settings",
+  "/dashboard/workspace/roles": "Roles & Permissions",
+  "/dashboard/admin/users": "User Management",
+  "/dashboard/admin/audit-logs": "Audit Logs",
+  "/dashboard/admin/analytics": "System Analytics",
 };
 
 export default function DashboardLayout() {
@@ -128,10 +147,32 @@ export default function DashboardLayout() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="text-zinc-500 hover:text-zinc-300 transition-colors relative" aria-label="Notifications">
+              <button 
+                onClick={() => {
+                  const evt = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true });
+                  document.dispatchEvent(evt);
+                }}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors hidden sm:block" 
+                aria-label="Search Command Palette"
+                title="Search (Ctrl+K)"
+              >
+                <Search size={16} />
+              </button>
+              <button 
+                onClick={() => {
+                  const evt = new KeyboardEvent('keydown', { key: '?' });
+                  document.dispatchEvent(evt);
+                }}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors hidden sm:block" 
+                aria-label="Help & Shortcuts"
+                title="Help & Shortcuts (?)"
+              >
+                <HelpCircle size={16} />
+              </button>
+              <Link to="/dashboard/notifications" className="text-zinc-500 hover:text-zinc-300 transition-colors relative" aria-label="Notifications">
                 <Bell size={16} />
                 <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-zinc-400 rounded-full" />
-              </button>
+              </Link>
               <Link to="/settings" className="text-zinc-500 hover:text-zinc-300 transition-colors" aria-label="Settings">
                 <Settings size={16} />
               </Link>
@@ -143,6 +184,9 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
       </main>
+      
+      <CommandPalette />
+      <KeyboardShortcuts />
     </div>
   );
 }

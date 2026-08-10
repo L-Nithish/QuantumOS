@@ -35,5 +35,17 @@ export const authService = {
     localStorage.removeItem('quantumos_user_name');
     localStorage.removeItem('quantumos_user_email');
     window.location.href = '/';
+  },
+
+  forgotPassword: async (email: string): Promise<void> => {
+    await apiClient.post('/auth/forgot-password', { email });
+  },
+
+  resetPassword: async (token: string, password: string): Promise<void> => {
+    await apiClient.post('/auth/reset-password', { token, password });
+  },
+
+  verifyEmail: async (token: string): Promise<void> => {
+    await apiClient.post('/auth/verify-email', { token });
   }
 };

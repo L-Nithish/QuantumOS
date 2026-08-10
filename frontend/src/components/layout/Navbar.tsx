@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 const navItems = [
   { label: "Features", to: "/features" },
   { label: "Pricing", to: "/pricing" },
+  { label: "Contact", to: "/contact" },
   { label: "AI", to: "/ai-command-center" },
 ];
 
